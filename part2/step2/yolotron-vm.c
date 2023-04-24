@@ -54,7 +54,7 @@ static _Bool execute(FILE *stream)
 {
     int8_t ret;
     while ((ret = run_op(stream)) > 0);
-    return (!ret);
+    return (ret);
 }
 
 int main(int argc, char **argv)
