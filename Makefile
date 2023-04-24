@@ -27,3 +27,12 @@ all: $(BINS)
 
 $(BINS): %: %.c
 	@gcc -o $@ $<
+
+clean:
+	@rm -f $(BINS)
+
+fclean: clean
+
+re: fclean all
+
+.PHONY: all clean fclean re
