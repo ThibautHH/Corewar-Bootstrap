@@ -17,7 +17,7 @@ P2_NAMES		:=	yolotron-asm			\
 
 BINS			:=
 
-$(foreach i,$(shell seq -s' ' $(PART_COUNT)),
+$(foreach i,$(shell seq -s' ' $(PART_COUNT)),							\
 $(foreach j,$(shell seq -s' ' $(words $(P$i_NAMES))),$(eval				\
 BINS			+=	$(addprefix part$i/step$j/,$(word $j,$(P$i_NAMES)))	\
 )))
