@@ -10,10 +10,14 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define OP_COUNT 4
 #define IS_SPC(c) ((c) == ' ' || (c) == '\t')
+
+_Bool encode_arithm(const char *line, FILE *out, uint8_t code);
+_Bool encode_put(const char *line, FILE *out, uint8_t code);
 
 static const struct {
     char *name;
@@ -23,10 +27,10 @@ static const struct {
     {"add", 0x01, encode_arithm},
     {"sub", 0x02, encode_arithm},
     {"mul", 0x03, encode_arithm},
-    {"put", 0x04, NULL}
+    {"put", 0x04, encode_put}
 };
 
-static _Bool encode_put(const char *line, FILE *out, uint8_t code)
+_Bool encode_put(const char *line, FILE *out, uint8_t code)
 {
     if (!IS_SPC(*line))
         return 1;
@@ -43,7 +47,7 @@ static _Bool encode_put(const char *line, FILE *out, uint8_t code)
     return ferror(out);
 }
 
-static _Bool encode_arithm(const char *line, FILE *out, uint8_t code)
+_Bool encode_arithm(const char *line, FILE *out, uint8_t code)
 {
     if (!IS_SPC(*line))
         return 1;
