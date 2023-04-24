@@ -16,13 +16,13 @@
 #define OP_COUNT 4
 #define IS_SPC(c) ((c) == ' ' || (c) == '\t')
 
-_Bool encode_arithm(const char *line, FILE *out, uint8_t code);
-_Bool encode_put(const char *line, FILE *out, uint8_t code);
+_Bool encode_arithm(const char *line, FILE *out);
+_Bool encode_put(const char *line, FILE *out);
 
 static const struct {
     char *name;
     uint8_t code;
-    _Bool (*encode_op)(const char *line, FILE *out, uint8_t code);
+    _Bool (*encode_op)(const char *line, FILE *out);
 } ops[OP_COUNT] = {
     {"add", 0x01, encode_arithm},
     {"sub", 0x02, encode_arithm},
@@ -30,24 +30,21 @@ static const struct {
     {"put", 0x04, encode_put}
 };
 
-_Bool encode_put(const char *line, FILE *out, uint8_t code)
+_Bool encode_put(const char *line, FILE *out)
 {
     if (!IS_SPC(*line))
         return 1;
     while (IS_SPC(*line))
         line++;
-    fprintf(out, (char[2]){code, '\0'});
-    if (ferror(out))
-        return 1;
     uint32_t len = strlen(line);
     fwrite(&len, sizeof(uint32_t), 1, out);
     if (ferror(out))
         return 1;
-    fwrite(line, sizeof(char[len]), 1, out);
+    fwrite(line, sizeof(char), len, out);
     return ferror(out);
 }
 
-_Bool encode_arithm(const char *line, FILE *out, uint8_t code)
+_Bool encode_arithm(const char *line, FILE *out)
 {
     if (!IS_SPC(*line))
         return 1;
@@ -63,30 +60,29 @@ _Bool encode_arithm(const char *line, FILE *out, uint8_t code)
         line++;
     if (*line != '\n')
         return 1;
-    fprintf(out, (char[2]){code, '\0'});
-    if (ferror(out))
-        return 1;
-    fwrite(params, sizeof(int32_t[2]), 1, out);
+    fwrite(params, sizeof(int32_t), 2, out);
     return ferror(out);
 }
 
 static int compile(const char *file, const char *output)
 {
     FILE *in = fopen(file, "r"), *out = fopen(output, "w");
+    if (!in || !out || setvbuf(out, NULL, _IONBF, 0))
+        return (84);
     char *line = NULL;
     size_t size = 0;
     _Bool has_failed = 0, is_op = 0;
-    if (!in || !out)
-        return (84);
     errno = 0;
-    for (ssize_t len; (len = getline(&line, &size, in)) != -1 || has_failed; errno = 0, is_op = 0) {
+    for (ssize_t len; ((len = getline(&line, &size, in)) != -1) || has_failed; errno = 0, is_op = 0) {
         if (len == 1)
             continue;
-        line[len - 1] = '\0';
-        for (size_t i = 0, op_len = strlen(ops[i].name); i < OP_COUNT; i++)
-            if (!strncmp(line, ops[i].name, op_len)) {
+        for (size_t i = 0; i < OP_COUNT; i++)
+            if (!strncmp(line, ops[i].name, strlen(ops[i].name))) {
                 is_op = 1;
-                has_failed = ops[i].encode_op(line + op_len, out, ops[i].code);
+                fwrite(&ops[i].code, sizeof(uint8_t), 1, out);
+                if (ferror(out))
+                    return 1;
+                has_failed = ops[i].encode_op(line + strlen(ops[i].name), out);
                 break;
             }
         if (!is_op)
