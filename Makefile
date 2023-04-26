@@ -23,7 +23,6 @@ BINS			+=	$(addprefix part$i/step$j/,$(word $j,$(P$i_NAMES)))	\
 )))
 
 all: $(BINS)
-	@echo "All done!"
 
 $(BINS): %: %.c
 	@gcc -o $@ $<
