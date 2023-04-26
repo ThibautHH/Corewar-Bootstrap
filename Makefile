@@ -24,14 +24,15 @@ BINS			+=	$(addprefix part$i/step$j/,$(word $j,$(P$i_NAMES)))	\
 
 all: $(BINS)
 
-$(BINS): %: %.c
+$(BINS):	%:	%.c
 	@gcc -o $@ $<
 
 clean:
+	@rm -f *.bytecode
+
+fclean:	clean
 	@rm -f $(BINS)
 
-fclean: clean
+re:		fclean all
 
-re: fclean all
-
-.PHONY: all clean fclean re
+.PHONY:	all clean fclean re
