@@ -36,7 +36,7 @@ _Bool encode_put(const char *line, FILE *out)
         return 1;
     while (IS_SPC(*line))
         line++;
-    uint32_t len = strlen(line);
+    uint32_t len = strlen(line) - 1;
     fwrite(&len, sizeof(uint32_t), 1, out);
     if (ferror(out))
         return 1;
